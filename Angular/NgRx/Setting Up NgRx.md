@@ -189,3 +189,42 @@ We use the `createReducer()` function to create a reducer for our state. It acce
 Here you can see how our adapter methods come in handy.
 
 ### Effects
+
+Effects are responsible for handling side effects like fetching data from a server, saving data to local storage etc. The part of ngrx that uses rxjs heavily is the effect. Usually for applications of this complexity, the effects are used to fetch data from an external source on initial app load. How this works is that, we have an action tp load the application data. Since this would require the application to make a request outside the application to a server or api, the effect will take this action and make that request, when the data is retrieved, an action is dispatched with the retrieved data to the store. Here's how it looks like:
+
+```
+@Injectable()
+export class BoardEffects {
+  constructor(
+    private action$: Actions,
+    private apiService: ApiService,
+    private localStorageService: LocalstorageService
+  ) {}
+
+  loadBoards$ = createEffect(() =>
+    this.action$.pipe(
+      ofType(loadBoards),
+      mergeMap(() => {
+        const boardsFromLocalStorage =
+          this.localStorageService.getItemFromLocalStorage('boards');
+
+        if (boardsFromLocalStorage) {
+          return of(loadBoardsSuccess({ boards: boardsFromLocalStorage }));
+        } else {
+          return this.apiService.fetchData().pipe(
+            map((boards) => {
+              this.localStorageService.setItemInLocalStorage('boards', boards);
+              return loadBoardsSuccess({ boards });
+            }),
+            catchError((error) =>
+              of(loadBoardsFailure({ error: error.message }))
+            )
+          );
+        }
+      })
+    )
+  );
+}
+```
+
+Here, our effect listens for a loadBoards action and reacts to it accordingly. Once the data is successfully retrieved, we set it in the store. We are also handling some local storage stuff here.
