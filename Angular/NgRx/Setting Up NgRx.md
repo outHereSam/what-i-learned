@@ -193,6 +193,8 @@ Here you can see how our adapter methods come in handy.
 Effects are responsible for handling side effects like fetching data from a server, saving data to local storage etc. The part of ngrx that uses rxjs heavily is the effect. Usually for applications of this complexity, the effects are used to fetch data from an external source on initial app load. How this works is that, we have an action tp load the application data. Since this would require the application to make a request outside the application to a server or api, the effect will take this action and make that request, when the data is retrieved, an action is dispatched with the retrieved data to the store. Here's how it looks like:
 
 ```
+// board.effects.ts
+
 @Injectable()
 export class BoardEffects {
   constructor(
@@ -228,3 +230,56 @@ export class BoardEffects {
 ```
 
 Here, our effect listens for a loadBoards action and reacts to it accordingly. Once the data is successfully retrieved, we set it in the store. We are also handling some local storage stuff here.
+
+### Router
+
+The router-store lets you connect the Angular Router with the Store. During each router navigation cycle, multiple actions are dispatched that allow you to listen for changes in the store and react accordingly.
+I mainly used the router-store to get url params to fetch a specific board from the store when we navigate to a board detail page.
+In the root of my state directory, I have a `router.selectors.ts` file which exports a router selector.
+
+```
+// router.selectors.ts
+
+import { getRouterSelectors } from '@ngrx/router-store';
+
+export const { selectRouteParams } = getRouterSelectors();
+
+```
+
+Now I can have a selector that selects just one board entity, pass it the `selectRouteParams` which will handle getting the route parameters and using the id passed to the params to get that specific board entity.
+
+```
+// board.selectors.ts
+
+export const selectBoard = createSelector(
+  selectBoardEntities,
+  selectRouteParams,
+  (boards, params) => {
+    const id = params['id'];
+    return id ? boards[id] : undefined;
+  }
+);
+```
+
+I can easily use this selector to get a board based on the route param like so
+
+```
+// board-detail.component.ts
+
+@Component({
+  selector: 'app-board-detail',
+  standalone: true,
+  imports: [AsyncPipe, BoardContentComponent, BoardFormComponent],
+  templateUrl: './board-detail.component.html',
+  styleUrl: './board-detail.component.sass',
+})
+export class BoardDetailComponent {
+  board$ = this.store.select(selectBoard);
+
+  constructor(private store: Store) {}
+
+  ngOnInit() {
+    this.board$.subscribe((board) => console.log(board));
+  }
+}
+```
