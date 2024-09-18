@@ -305,10 +305,11 @@ export const {
   selectTotal: selectTotalBoards,
 } = boardAdapter.getSelectors(selectBoardState);
 
-// Select a single board
+// Select a single board with its id
 export const selectBoardById = (id: number) =>
   createSelector(selectBoardEntities, (entities) => entities[id]);
 
+// Select a board with the route param id
 export const selectBoard = createSelector(
   selectBoardEntities,
   selectRouteParams,
