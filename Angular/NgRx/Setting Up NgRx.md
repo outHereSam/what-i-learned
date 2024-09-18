@@ -231,7 +231,7 @@ export class BoardEffects {
 
 Here, our effect listens for a loadBoards action and reacts to it accordingly. Once the data is successfully retrieved, we set it in the store. We are also handling some local storage stuff here.
 
-### Router
+### Router-Store
 
 The router-store lets you connect the Angular Router with the Store. During each router navigation cycle, multiple actions are dispatched that allow you to listen for changes in the store and react accordingly.
 I mainly used the router-store to get url params to fetch a specific board from the store when we navigate to a board detail page.
